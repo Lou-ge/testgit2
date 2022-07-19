@@ -21,15 +21,17 @@ import nc.jdbc.framework.processor.MapListProcessor;
 import nc.pubitf.so.pub.api.rest.AbstractSORestResource;
 import nc.vo.pub.BusinessException;
 import nc.vo.scmpub.api.rest.utils.RestUtils;
-import nc.vo.so.m30.MYParamsVO;
+import nc.vo.so.m30.PagingParamsVO;
 import nc.vo.so.m30.QueryCountVO;
 import org.json.JSONString;
 
 @Path("service")
 public class YSaleOrderResource extends AbstractSORestResource {
-
+    static {
+        VIEW_NAME = "view_aurora_mxb";
+    }
     //视图
-    private static final String VIEW_NAME = "view_aurora_mxb";
+    private static final String VIEW_NAME;
 
     @POST
     @Path("getSelfHoldingData")
@@ -40,28 +42,28 @@ public class YSaleOrderResource extends AbstractSORestResource {
         Map<String, List> returnDataMap = new HashMap<String, List>();
         try {
             RestUtils.initInvocationInfo();
-            MYParamsVO myParamsVO = new Gson().fromJson(json.toString(), MYParamsVO.class);
+            PagingParamsVO pagingParamsVO = new Gson().fromJson(json.toString(), PagingParamsVO.class);
             //获取分页前的数据总量
-            int totalData = getCount(json, new MYParamsVO());
-            if (myParamsVO.getPageIndex() <= 0 || myParamsVO.getPageSize() <= 0) {
+            int totalData = getCount(json, new QueryCountVO());
+            if (pagingParamsVO.getPageIndex() <= 0 || pagingParamsVO.getPageSize() <= 0) {
                 return RestUtils.toJSONString(new String("页码值或页总量输入有误！"));
             } else if (totalData == 0) {
                 return RestUtils.toJSONString(new String("查询到的数据量为0"));
-            } else if (myParamsVO.getPageIndex() > (totalData / myParamsVO.getPageSize())) {
+            } else if (pagingParamsVO.getPageIndex() > (totalData / pagingParamsVO.getPageSize())) {
                 //访问页数超过总页数，页码不存在
                 return RestUtils.toJSONString(new String("访问页数超过总页数，页码不存在"));
-            } else if (myParamsVO.getPageIndex() <= (totalData / myParamsVO.getPageSize())) {
+            } else if (pagingParamsVO.getPageIndex() <= (totalData / pagingParamsVO.getPageSize())) {
                 NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(), "pfxx".getBytes());
                 StringBuilder whereClause = new StringBuilder();
-                whereClause.append(" WHERE yearmonth >= '").append(myParamsVO.getStartDate());
-                whereClause.append("' and yearmonth <= '").append(myParamsVO.getEndDate());
-                whereClause.append("' and projectstagecode = '").append(myParamsVO.getProjectStageCode());
-                whereClause.append("' and code = '").append(myParamsVO.getCompanyCode());
-                whereClause.append("' and kmlx = '").append(myParamsVO.getAccountType()).append("'");
+                whereClause.append(" WHERE yearmonth >= '").append(pagingParamsVO.getStartDate());
+                whereClause.append("' and yearmonth <= '").append(pagingParamsVO.getEndDate());
+                whereClause.append("' and projectstagecode = '").append(pagingParamsVO.getProjectStageCode());
+                whereClause.append("' and code = '").append(pagingParamsVO.getCompanyCode());
+                whereClause.append("' and kmlx = '").append(pagingParamsVO.getAccountType()).append("'");
 //            whereClause.append(" and datatype = ").append(queryCountVO.getDataType());
 
                 //分页
-                String sql = "SELECT * FROM (SELECT t.*,rownum rn FROM(select * from " + VIEW_NAME + whereClause + " )t )WHERE rn BETWEEN (" + myParamsVO.getPageIndex() + "-1)*" + myParamsVO.getPageSize() + "+1 AND " + myParamsVO.getPageIndex() * myParamsVO.getPageSize();
+                String sql = "SELECT * FROM (SELECT t.*,rownum rn FROM(select * from " + VIEW_NAME + whereClause + " )t )WHERE rn BETWEEN (" + pagingParamsVO.getPageIndex() + "-1)*" + pagingParamsVO.getPageSize() + "+1 AND " + pagingParamsVO.getPageIndex() * pagingParamsVO.getPageSize();
                 IUAPQueryBS bs = NCLocator.getInstance().lookup(IUAPQueryBS.class);
                 List<Map<String, String>> queryList = (List<Map<String, String>>) bs.executeQuery(sql, new MapListProcessor());
                 //组装接口的返回值
@@ -113,26 +115,13 @@ public class YSaleOrderResource extends AbstractSORestResource {
         Integer dataCounts = -1;
         if (obj instanceof QueryCountVO) {
             NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(), "pfxx".getBytes());
-            QueryCountVO queryCountVO = (QueryCountVO) (new Gson().fromJson(json.toString(), QueryCountVO.class));
+            QueryCountVO queryCountVO = new Gson().fromJson(json.toString(), QueryCountVO.class);
             StringBuilder whereClause = new StringBuilder();
             whereClause.append(" WHERE yearmonth >= '").append(queryCountVO.getStartDate());
             whereClause.append("' and yearmonth <= '").append(queryCountVO.getEndDate());
             whereClause.append("' and projectstagecode = '").append(queryCountVO.getProjectStageCode());
             whereClause.append("' and code = '").append(queryCountVO.getCompanyCode());
             whereClause.append("' and kmlx = '").append(queryCountVO.getAccountType()).append("'");
-//            whereClause.append(" and datatype = ").append(queryCountVO.getDataType());
-            String sql = "SELECT COUNT(*) FROM " + VIEW_NAME + whereClause;
-            IUAPQueryBS bs = NCLocator.getInstance().lookup(IUAPQueryBS.class);
-            dataCounts = (Integer) bs.executeQuery(sql, new ColumnProcessor());
-        } else if (obj instanceof MYParamsVO) {
-            NCLocator.getInstance().lookup(ISecurityTokenCallback.class).token("NCSystem".getBytes(), "pfxx".getBytes());
-            MYParamsVO myParamsVO = new Gson().fromJson(json.toString(), MYParamsVO.class);
-            StringBuilder whereClause = new StringBuilder();
-            whereClause.append(" WHERE yearmonth >= '").append(myParamsVO.getStartDate());
-            whereClause.append("' and yearmonth <= '").append(myParamsVO.getEndDate());
-            whereClause.append("' and projectstagecode = '").append(myParamsVO.getProjectStageCode());
-            whereClause.append("' and code = '").append(myParamsVO.getCompanyCode());
-            whereClause.append("' and kmlx = '").append(myParamsVO.getAccountType()).append("'");
 //            whereClause.append(" and datatype = ").append(queryCountVO.getDataType());
             String sql = "SELECT COUNT(*) FROM " + VIEW_NAME + whereClause;
             IUAPQueryBS bs = NCLocator.getInstance().lookup(IUAPQueryBS.class);

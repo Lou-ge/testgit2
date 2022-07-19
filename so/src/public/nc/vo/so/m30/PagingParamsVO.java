@@ -1,6 +1,6 @@
 package nc.vo.so.m30;
 
-public class MYParamsVO {
+public class PagingParamsVO {
     //开始日期
     private String startDate;
     //结束日期
@@ -20,7 +20,7 @@ public class MYParamsVO {
     //汇总/明细
     private String dataType;
 
-    public MYParamsVO(String startDate, String endDate, String projectStageCode, String companyCode, Integer pageIndex, Integer pageSize, Integer pageCount, String accountType, String dataType) {
+    public PagingParamsVO(String startDate, String endDate, String projectStageCode, String companyCode, Integer pageIndex, Integer pageSize, Integer pageCount, String accountType, String dataType) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.projectStageCode = projectStageCode;
@@ -31,7 +31,7 @@ public class MYParamsVO {
         this.accountType = accountType;
         this.dataType = dataType;
     }
-    public MYParamsVO(){
+    public PagingParamsVO(){
     }
 
     public String getStartDate() {
